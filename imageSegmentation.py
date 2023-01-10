@@ -33,7 +33,7 @@ def k_means(data, k, max_iter=100):
 
 
 
-def segmentImageColor(filepath,resultFilepath=0):
+def segmentImageColor(filepath):
     # Load the image as Grayscale
     image = ImageOps.grayscale(im.open(filepath))
 
@@ -62,7 +62,10 @@ def segmentImageColor(filepath,resultFilepath=0):
 
 
 
-def segmentImageSymbols(data,resultFilepath):
+def segmentImageSymbols(filepath):
+
+    # getting data for color segmented image
+    data = segmentImageColor(filepath)
 
     # Getting possitions for pixels in symbols
     yMap,xMap = np.where(data == 255)
@@ -110,50 +113,45 @@ def segmentImageSymbols(data,resultFilepath):
                 group += 1
     
     # Removing groups that are too small
+    group = 1
     for i in range(1, np.unique(groupMap).size):
         if groupMap[groupMap == i].size < 250:
             groupMap[groupMap == i] = 0
         else:
-            groupMap[groupMap == i] = i *50
+            groupMap[groupMap == i] = group
+            group +=1
 
 
+    # Creating empry 3D array to hold 2D data from symbols
+    newData = np.zeros((np.unique(groupMap).size-1,28,28))
 
-
-
-
-    # Creating empry 3D array to hold 2D data from images
-    data = np.zeros((np.unique(groupMap).size,28,28))
-
-
+    scale = 24/groupMap.shape[0]
     for i in range(1, np.unique(groupMap).size):
-        print(i)
-        yMap,xMap = np.where(groupMap == i*50)
-        dummyArray = groupMap[yMap[np.argmin(yMap)]:yMap[np.argmax(yMap)],xMap[np.argmin(xMap)]:xMap[np.argmax(xMap)]]
-        dummyimg = im.fromarray(dummyArray).convert('L')
-        dummyimg = dummyimg.resize((int((20/height)*width),20))
-        img = dummyimg.save(str(i)+'.png')
-        dummyArray = np.asarray(dummyimg)
-        print(dummyArray)
+        yMap,xMap = np.where(groupMap == i)
+        try:
+            # Dummy array that only includes a single group
+            dummyArray = groupMap[yMap[np.argmin(yMap)]:yMap[np.argmax(yMap)],xMap[np.argmin(xMap)]:xMap[np.argmax(xMap)]]
+            dummyArray[dummyArray != i] = 0
+            dummyArray[dummyArray == i] = 255
 
+            # Array tom image, downscale and back to array
+            dummyimg = im.fromarray(dummyArray).convert('L')
+            dummyimg = dummyimg.resize((int(dummyArray.shape[1]*scale),int(dummyArray.shape[0]*scale)))
+            dummyArray = np.asarray(dummyimg)
 
+            # getting margin for symbol
+            margin = [int((28-dummyArray.shape[0])/2),int((28-dummyArray.shape[1])/2)]
+            end1,end2 = 27,27
+            if dummyArray.shape[0]%2 == 0:
+                end1 += 1
+            if dummyArray.shape[1]%2 == 0:
+                end2 += 1
 
+            # Filling data array with symbol data in correct possition according to margin
+            newData[i-1,margin[0]:end1-margin[0],margin[1]:end2-margin[1]] = dummyArray
 
+        except:
+            pass
 
-
-    # Converting from array to image and resizing
-    img = im.fromarray(data[1]).convert('L')
-    img = img.resize((int((20/height)*width),20))
-    img = img.save(resultFilepath)
-
-    return
-
-
-
-
-
-# Test area
-
-fileName = '7plus4.png'
-data = segmentImageColor('testdata/'+fileName)
-segmentImageSymbols(data,'resultData/'+fileName)
+    return newData
 
