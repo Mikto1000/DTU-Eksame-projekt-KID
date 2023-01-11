@@ -5,8 +5,8 @@
 #
 # The Script works with any picture of any size.
 #
-# There is a minimum pixel limit of 250 for a symbol to not be counted a an error.
-# This can simply be changed on line 130.
+# There is a minimum pixel limit of 1000 for a symbol to not be counted a an error.
+# This can simply be changed on line 134.
 #
 # Written By: Albert Frederik Koch Hansen
 
@@ -79,6 +79,15 @@ def segmentImageSymbols(rawData):
     # getting data for color segmented image
     data = segmentImageColor(rawData)
 
+
+    print(data[data == 255].size)
+    print(data[data == 0].size)
+
+    # If no text is on the frame
+    if data[data == 255].size < 500 or data[data == 0].size < 500:
+        
+        return 'error'
+
     # Getting possitions for pixels in symbols
     yMap,xMap = np.where(data == 255)
     # Cutting image
@@ -86,7 +95,7 @@ def segmentImageSymbols(rawData):
 
     # billede 1
     testbillede = im.fromarray(data).convert('L')
-    testbillede = testbillede.save('hej.png')
+    testbillede = testbillede.save('hej1.png')
 
     # Storing image dimentions in variables
     height,width = data.shape
@@ -128,15 +137,18 @@ def segmentImageSymbols(rawData):
                 groupMap[groupMap == groupMap[u,i]] = group
                 group += 1
     
-    # Removing groups that are too small
+
+    # Removing groups that are too small and renaming them to lowest possible int
     group = 1
-    for i in range(1, np.unique(groupMap).size):
-        if groupMap[groupMap == i].size < 1000:
+    for i in np.unique(groupMap[groupMap != 0]).astype(int):
+        if groupMap[groupMap == i].size < 500:
+            if groupMap[groupMap == i].size > 200:
+                print(groupMap[groupMap == i].size)
             groupMap[groupMap == i] = 0
         else:
-            print(groupMap[groupMap == i].size)
             groupMap[groupMap == i] = group
             group +=1
+    
     
     # Reshaping image
     yMap,xMap = np.where(groupMap != 0)
@@ -144,8 +156,16 @@ def segmentImageSymbols(rawData):
     groupMap = groupMap[yMap[np.argmin(yMap)]:yMap[np.argmax(yMap)],xMap[np.argmin(xMap)]:xMap[np.argmax(xMap)]]
 
 
+    newMap = np.array(groupMap)
+    newMap[newMap != 0] = 255
+
+    # billede 2
+    testbillede = im.fromarray(newMap).convert('L')
+    testbillede = testbillede.save('hej2.png')
+
+
     # Creating empry 3D array to hold 2D data from symbols
-    newData = np.zeros((np.unique(groupMap).size-1,28,28))
+    newData = np.zeros((np.unique(groupMap[groupMap != 0]).size,28,28))
 
     scale = 24/groupMap.shape[0]
     for i in range(1, np.unique(groupMap).size):

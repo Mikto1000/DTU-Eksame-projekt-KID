@@ -9,6 +9,7 @@ from imageSegmentation import segmentImageSymbols as segmentImage
 # image segmentation af camera feed som returnere et (N,28,28) array, hvor N er antal symboler
 def getSymbolPixelArray(frame):
     data = segmentImage(frame)
+
     return data
 
 
@@ -39,16 +40,23 @@ def camera():
     ret, frame = cap.read()
     frame = np.asarray(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
 
-    imgarray = np.asarray(img)
-    data = getSymbolPixelArray(frame)
+    # rå billede
+    testbillede = im.fromarray(frame).convert('L')
+    testbillede = testbillede.save('hej0.png')
 
+
+    #img = ImageOps.grayscale(im.open('testdata/5plus3.png'))
+    #frame = np.asarray(img)
+
+    data = getSymbolPixelArray(frame)
+    if data == 'error':
+        print('error. looping again')
+        return
+    
     for i in range(data.shape[0]):
         img = im.fromarray(data[i]).convert('L')
         img = img.save(str(i)+'.png')
-
-    print(data)
-
-    pass
+    
 
 
 
@@ -59,4 +67,5 @@ def camera():
 
 
 #MAIN
-camera()
+while True:
+    camera()
