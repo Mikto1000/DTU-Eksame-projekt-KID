@@ -1,3 +1,16 @@
+
+# This Script will seperate an imagefile with any number of symbols
+# into a (N,28,28) array where N is the number of symbols with a
+# pixel resolution of 28x28.
+#
+# The Script works with any picture of any size.
+#
+# There is a minimum pixel limit of 250 for a symbol to not be counted a an error.
+# This can simply be changed on line 130.
+#
+# Written By: Albert Frederik Koch Hansen
+
+
 import numpy as np
 from PIL import Image as im
 from PIL import ImageOps
@@ -7,7 +20,6 @@ def k_means(data, k, max_iter=100):
     centroids = np.array([[0],[255]])
     #centroids = data[np.random.choice(data.shape[0], k, replace=False)] ### old code. maybe still usefull
 
-    
     for _ in range(max_iter):
         # Compute the distance from each point to each centroid
         distances = np.sqrt(((data[:, np.newaxis] - centroids) ** 2).sum(axis=-1))
@@ -33,12 +45,12 @@ def k_means(data, k, max_iter=100):
 
 
 
-def segmentImageColor(filepath):
-    # Load the image as Grayscale
-    image = ImageOps.grayscale(im.open(filepath))
+def segmentImageColor(rawData):
+    # Getting dimentions of picture
+    height,width = rawData.shape
 
     # Convert image to numpy array and reshaping data to 1D
-    data = np.asarray(image).reshape(image.height*image.width,1)
+    data = rawData.reshape(height*width,1)
 
     # Getting means and labels for the pixels
     centroids, labels = k_means(data,2)
@@ -48,10 +60,10 @@ def segmentImageColor(filepath):
     centroids[np.argmax(centroids)] = 255
 
     # mapping new color values for pixels
-    newData = np.zeros((image.height*image.width,1))
+    newData = np.zeros((height*width,1))
     for i in range(labels.size):
         newData[i,0] = centroids[labels[i],0]
-    newData = newData.reshape(image.height,image.width)
+    newData = newData.reshape(height,width)
 
     return newData
 
@@ -62,15 +74,19 @@ def segmentImageColor(filepath):
 
 
 
-def segmentImageSymbols(filepath):
+def segmentImageSymbols(rawData):
 
     # getting data for color segmented image
-    data = segmentImageColor(filepath)
+    data = segmentImageColor(rawData)
 
     # Getting possitions for pixels in symbols
     yMap,xMap = np.where(data == 255)
     # Cutting image
     data = data[yMap[np.argmin(yMap)]:yMap[np.argmax(yMap)],xMap[np.argmin(xMap)]:xMap[np.argmax(xMap)]]
+
+    # billede 1
+    testbillede = im.fromarray(data).convert('L')
+    testbillede = testbillede.save('hej.png')
 
     # Storing image dimentions in variables
     height,width = data.shape
@@ -115,11 +131,17 @@ def segmentImageSymbols(filepath):
     # Removing groups that are too small
     group = 1
     for i in range(1, np.unique(groupMap).size):
-        if groupMap[groupMap == i].size < 250:
+        if groupMap[groupMap == i].size < 1000:
             groupMap[groupMap == i] = 0
         else:
+            print(groupMap[groupMap == i].size)
             groupMap[groupMap == i] = group
             group +=1
+    
+    # Reshaping image
+    yMap,xMap = np.where(groupMap != 0)
+    # Cutting image
+    groupMap = groupMap[yMap[np.argmin(yMap)]:yMap[np.argmax(yMap)],xMap[np.argmin(xMap)]:xMap[np.argmax(xMap)]]
 
 
     # Creating empry 3D array to hold 2D data from symbols
