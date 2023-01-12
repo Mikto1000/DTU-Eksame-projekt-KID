@@ -79,10 +79,6 @@ def segmentImageSymbols(rawData):
     # getting data for color segmented image
     data = segmentImageColor(rawData)
 
-
-    print(data[data == 255].size)
-    print(data[data == 0].size)
-
     # If no text is on the frame
     if data[data == 255].size < 500 or data[data == 0].size < 500:
         
@@ -92,10 +88,6 @@ def segmentImageSymbols(rawData):
     yMap,xMap = np.where(data == 255)
     # Cutting image
     data = data[yMap[np.argmin(yMap)]:yMap[np.argmax(yMap)],xMap[np.argmin(xMap)]:xMap[np.argmax(xMap)]]
-
-    # billede 1
-    testbillede = im.fromarray(data).convert('L')
-    testbillede = testbillede.save('hej1.png')
 
     # Storing image dimentions in variables
     height,width = data.shape
@@ -141,7 +133,7 @@ def segmentImageSymbols(rawData):
     # Removing groups that are too small and renaming them to lowest possible int
     group = 1
     for i in np.unique(groupMap[groupMap != 0]).astype(int):
-        if groupMap[groupMap == i].size < 500:
+        if groupMap[groupMap == i].size < 250:
             if groupMap[groupMap == i].size > 200:
                 print(groupMap[groupMap == i].size)
             groupMap[groupMap == i] = 0
@@ -158,10 +150,6 @@ def segmentImageSymbols(rawData):
 
     newMap = np.array(groupMap)
     newMap[newMap != 0] = 255
-
-    # billede 2
-    testbillede = im.fromarray(newMap).convert('L')
-    testbillede = testbillede.save('hej2.png')
 
 
     # Creating empry 3D array to hold 2D data from symbols
