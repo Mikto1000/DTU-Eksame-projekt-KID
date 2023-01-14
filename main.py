@@ -1,3 +1,14 @@
+#Import CNN dependencies and Current Model
+import torch
+import torch.nn as nn
+import torchvision.transforms as transforms
+from PIL import Image
+from CNNTrainer import CNN
+import io
+model=CNN(in_channels=1, num_classes=13)
+model.load_state_dict(torch.load("TrainedModel.pth"))
+
+
 import numpy as np
 import cv2
 from PIL import Image as im
@@ -33,7 +44,18 @@ def getSymbols(frame):
 
 # CNN tager en (28x28) matrix og outputter et enkelt symbol: (0-9) eller (+, -, *)
 def CNN(data=0):
-    # taler til CNN
+    
+    def prediction():
+
+        Transf=transforms.Compose([transforms.Resize((28,28)),transforms.ToTensor(),transforms.Grayscale(num_output_channels=1)])
+        image = Image.open(io.BytesIO(image_bytes))
+        Transf(image).unsqueeze(0)
+
+        images = images.reshape()
+        outputs = model(images)
+        # max returns (value ,index)
+        _, predicted = torch.max(outputs.data, 1)
+    print()
     return "3-53+2**2*3"
 
 
