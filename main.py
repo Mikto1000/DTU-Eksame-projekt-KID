@@ -3,15 +3,42 @@ import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
 from PIL import Image
-from CNNTrainer import CNN
-import io
+class CNN(nn.Module):
+    def __init__(self, in_channels=1, num_classes=13):
+        super(CNN, self).__init__()
+        self.conv1 = nn.Conv2d(
+            in_channels=in_channels,
+            out_channels=8,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+        )
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.conv2 = nn.Conv2d(
+            in_channels=8,
+            out_channels=16,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+        )
+        self.fc1 = nn.Linear(16 * 7 * 7, num_classes)
+
+    def forward(self, x):
+
+        x = F.relu(self.conv1(x))
+        x = self.pool(x)
+        x = F.relu(self.conv2(x))
+        x = self.pool(x)
+        x = x.reshape(x.shape[0], -1)
+        x = self.fc1(x)
+        return x
 model=CNN(in_channels=1, num_classes=13)
 model.load_state_dict(torch.load("TrainedModel.pth"))
-
+model.eval()
 
 import numpy as np
-import cv2
 from PIL import Image as im
+import cv2
 from PIL import ImageOps
 from imageSegmentation import segmentImageSymbols as segmentImage
 
@@ -30,9 +57,10 @@ def getSymbols(frame):
     MathString = ''
     #for i in range(symbolData.shape[0]):
         #MathString += str(CNN(symbolData[i]))
-    
-    MathString = CNN()
-    
+    Sign={0:"0",1:"1",2:"2",3:"3",4:"4",5:"5",6:"6",7:"7",8:"8",9:"9",10:"-",11:"*",12:"+"}
+    for i in symbolData:
+        MathString=f"{MathString}{Sign[CNN(i)]}"
+
     return MathString
 
 
@@ -43,20 +71,14 @@ def getSymbols(frame):
 
 
 # CNN tager en (28x28) matrix og outputter et enkelt symbol: (0-9) eller (+, -, *)
-def CNN(data=0):
-    
-    def prediction():
 
-        Transf=transforms.Compose([transforms.Resize((28,28)),transforms.ToTensor(),transforms.Grayscale(num_output_channels=1)])
-        image = Image.open(io.BytesIO(image_bytes))
-        Transf(image).unsqueeze(0)
-
-        images = images.reshape()
-        outputs = model(images)
-        # max returns (value ,index)
-        _, predicted = torch.max(outputs.data, 1)
-    print()
-    return "3-53+2**2*3"
+def CNN(data):
+    file = np.array(data)
+    Transf=transforms.Compose([transforms.ToTensor,transforms.Grayscale(num_output_channels=1)])
+    Tens=Transf(file).unsqueeze(0)
+    outputs = model(Tens)
+    _, predicted = torch.max(outputs.data, 1)   
+    return int(predicted[0])
 
 
 
