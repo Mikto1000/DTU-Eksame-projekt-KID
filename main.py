@@ -1,8 +1,10 @@
 #Import CNN dependencies and Current Model
 import torch
+import torch.nn.functional as F
 import torch.nn as nn
 import torchvision.transforms as transforms
 from PIL import Image
+
 class CNN(nn.Module):
     def __init__(self, in_channels=1, num_classes=13):
         super(CNN, self).__init__()
@@ -32,17 +34,18 @@ class CNN(nn.Module):
         x = x.reshape(x.shape[0], -1)
         x = self.fc1(x)
         return x
+
 model=CNN(in_channels=1, num_classes=13)
 model.load_state_dict(torch.load("TrainedModel.pth"))
 model.eval()
+
+
 
 import numpy as np
 from PIL import Image as im
 import cv2
 from PIL import ImageOps
 from imageSegmentation import segmentImageSymbols as segmentImage
-
-import datetime
 
 
 
@@ -55,8 +58,7 @@ def getSymbols(frame):
 
     # The string to contain handwritten math
     MathString = ''
-    #for i in range(symbolData.shape[0]):
-        #MathString += str(CNN(symbolData[i]))
+
     Sign={0:"0",1:"1",2:"2",3:"3",4:"4",5:"5",6:"6",7:"7",8:"8",9:"9",10:"-",11:"*",12:"+"}
     for i in symbolData:
         MathString=f"{MathString}{Sign[CNN(i)]}"
@@ -71,13 +73,15 @@ def getSymbols(frame):
 
 
 # CNN tager en (28x28) matrix og outputter et enkelt symbol: (0-9) eller (+, -, *)
-
 def CNN(data):
-    file = np.array(data)
-    Transf=transforms.Compose([transforms.ToTensor,transforms.Grayscale(num_output_channels=1)])
+    TensorTran=transforms.ToTensor()
+    file=np.array(data)
+    file=TensorTran(file)
+    file=file.type(torch.float)
+    Transf=transforms.Compose([transforms.Grayscale(num_output_channels=1)])
     Tens=Transf(file).unsqueeze(0)
     outputs = model(Tens)
-    _, predicted = torch.max(outputs.data, 1)   
+    _, predicted = torch.max(outputs.data, 1)
     return int(predicted[0])
 
 
@@ -93,9 +97,6 @@ def getFrame():
     ret, frame = cap.read()
     frame = np.asarray(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
 
-    #img = ImageOps.grayscale(im.open('testdata/5plus3.png'))
-    #frame = np.asarray(img)
-
     return frame
 
 
@@ -107,14 +108,9 @@ def getFrame():
 
 #MAIN
 while True:
-    a = datetime.datetime.now()
-
-    # Gat frame and determin mathString with CNN
+    # Get frame and determin mathString with CNN
     frame = getFrame()
     symbols = getSymbols(frame)
-
-    b = datetime.datetime.now()
-    print(b-a)
 
     # Sorting the string into numbers and operators
     numbers = [0]

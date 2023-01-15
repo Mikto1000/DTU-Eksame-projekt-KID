@@ -5,8 +5,8 @@
 #
 # The Script works with any picture of any size.
 #
-# There is a minimum pixel limit of 1000 for a symbol to not be counted a an error.
-# This can simply be changed on line 134.
+# There is a minimum pixel limit of 200 for a symbol to not be counted a an error.
+# This can simply be changed on line 136.
 #
 # Written By: Albert Frederik Koch Hansen
 
@@ -133,9 +133,7 @@ def segmentImageSymbols(rawData):
     # Removing groups that are too small and renaming them to lowest possible int
     group = 1
     for i in np.unique(groupMap[groupMap != 0]).astype(int):
-        if groupMap[groupMap == i].size < 250:
-            if groupMap[groupMap == i].size > 200:
-                print(groupMap[groupMap == i].size)
+        if groupMap[groupMap == i].size < 200:
             groupMap[groupMap == i] = 0
         else:
             groupMap[groupMap == i] = group
