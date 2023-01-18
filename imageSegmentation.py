@@ -78,9 +78,9 @@ def segmentImageSymbols(rawData):
 
     # getting data for color segmented image
     data = segmentImageColor(rawData)
-
+    
     # If no text is on the frame
-    if data[data == 255].size < 500 or data[data == 0].size < 500:
+    if data[data == 255].size < 500 or data[data == 0].size < 500 or data[data == 255].size > 20000:
         
         return 'error'
 
@@ -144,10 +144,6 @@ def segmentImageSymbols(rawData):
     yMap,xMap = np.where(groupMap != 0)
     # Cutting image
     groupMap = groupMap[yMap[np.argmin(yMap)]:yMap[np.argmax(yMap)],xMap[np.argmin(xMap)]:xMap[np.argmax(xMap)]]
-
-
-    newMap = np.array(groupMap)
-    newMap[newMap != 0] = 255
 
 
     # Creating empry 3D array to hold 2D data from symbols
