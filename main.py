@@ -85,6 +85,10 @@ def CNN(data):
     Tens=Transf(file).unsqueeze(0)
     outputs = model(Tens)
     _, predicted = torch.max(outputs.data, 1)
+    
+    #Prints out the confidence in each class, ordered by index
+    print(outputs.data/np.amax(np.array(outputs.data)))
+    
     return int(predicted[0])
 
 
