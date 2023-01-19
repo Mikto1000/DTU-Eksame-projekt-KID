@@ -2,7 +2,6 @@
 
 
 
-#Import CNN dependencies and Current Model
 import torch
 import torch.nn.functional as F
 import torch.nn as nn
@@ -10,6 +9,7 @@ import torchvision.transforms as transforms
 from PIL import Image
 import numpy as np
 import os
+from math import sqrt
 
 class CNN(nn.Module):
     def __init__(self, in_channels=1, num_classes=13):
@@ -59,31 +59,60 @@ def CNN(data):
     Tens=Transf(file).unsqueeze(0)
     outputs = model(Tens)
     _, predicted = torch.max(outputs.data, 1)
-    return int(predicted[0])
+
+
+    return outputs.data[0]
+    
 
 
 correct = []
 
-
 for i in range(10):
     files = os.listdir('valid/'+str(i))
-    print(len(files))
-    correct.append(0)
-    for file in files:
-        guess = CNN(np.asarray(Image.open('valid/'+str(i)+'/'+file)))
-        if guess == i:
-            correct[i] += 1
+    correct.append([])
+    for u in range(len(files)):
+        correct[i].append(0)
+        correct[i][u] = float(CNN(np.asarray(Image.open('valid/'+str(i)+'/'+files[u])))[i])
     
 
 
 symbols = ['Minus', 'Multiplication', 'Plus']
 for i in range(3):
     files = os.listdir('valid/'+symbols[i])
-    print(len(files))
-    correct.append(0)
-    for file in files:
-        guess = CNN(np.asarray(Image.open('valid/'+symbols[i]+'/'+file)))
-        if guess == 10+i:
-            correct[10+i] += 1
+    correct.append([])
+    for u in range(len(files)):
+        correct[i+10].append(0)
+        correct[i+10][u] = float(CNN(np.asarray(Image.open('valid/'+symbols[i]+'/'+files[u])))[i+10])
 
-print(correct)
+
+mean = []
+for i in range(13):
+    mean.append(0)
+    for u in range(len(correct[i])):
+        mean[i] += correct[i][u]
+    mean[i] /= len(correct[i])
+
+
+varians = []
+
+for i in range(13):
+    varians.append(0)
+    for u in range(len(correct[i])):
+        varians[i] += (correct[i][u]-mean[i])**2
+    varians[i] /= len(correct[i])
+
+
+resultup = []
+resultdown = []
+
+for i in range(13):
+    resultup.append(0)
+    resultdown.append(0)
+
+    error = 1.96*sqrt(varians[i])
+
+    resultup[i] = mean[i] + error
+    resultdown[i] = mean[i] - error
+
+print(resultup)
+print(resultdown)
