@@ -2,6 +2,7 @@
 import torch
 import torch.nn.functional as F
 import torch.nn as nn
+import torch.nn.functional as F
 import torchvision.transforms as transforms
 from PIL import Image
 
@@ -38,12 +39,12 @@ class CNN(nn.Module):
 model=CNN(in_channels=1, num_classes=13)
 model.load_state_dict(torch.load("TrainedModel.pth"))
 model.eval()
-
+Sign={0:"0",1:"1",2:"2",3:"3",4:"4",5:"5",6:"6",7:"7",8:"8",9:"9",10:"-",11:"*",12:"+"}
 
 
 import numpy as np
 from PIL import Image as im
-import cv2
+#import cv2
 from PIL import ImageOps
 from imageSegmentation import segmentImageSymbols as segmentImage
 
@@ -84,17 +85,14 @@ def CNN(data):
     Transf=transforms.Compose([transforms.Grayscale(num_output_channels=1)])
     Tens=Transf(file).unsqueeze(0)
     outputs = model(Tens)
+    _, predicted = torch.max(outputs.data, 1)   
+    print(predicted)
+    print(outputs.data/np.amax(np.array(outputs.data)))
+    print(Sign[int(predicted[0])])
     _, predicted = torch.max(outputs.data, 1)
     
     
     return int(predicted[0])
-
-
-
-
-
-
-
 
 # Live camera feed hvor billede skal 'fodres' til imageSegmentation og så CNN
 def getFrame():

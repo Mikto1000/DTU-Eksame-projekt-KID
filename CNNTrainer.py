@@ -44,8 +44,8 @@ in_channels = 1
 num_classes = 13
 learning_rate = 3e-4 # karpathy's constant
 batch_size = 64
-num_epochs = 0
-Save=False
+num_epochs = 20
+Save=True
 Transf=transforms.Compose([transforms.Resize((28,28)),transforms.ToTensor(),transforms.Grayscale(num_output_channels=1)])
 
 
