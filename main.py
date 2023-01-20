@@ -44,7 +44,7 @@ Sign={0:"0",1:"1",2:"2",3:"3",4:"4",5:"5",6:"6",7:"7",8:"8",9:"9",10:"-",11:"*",
 
 import numpy as np
 from PIL import Image as im
-#import cv2
+import cv2
 from PIL import ImageOps
 from imageSegmentation import segmentImageSymbols as segmentImage
 
@@ -86,13 +86,14 @@ def CNN(data):
     Tens=Transf(file).unsqueeze(0)
     outputs = model(Tens)
     _, predicted = torch.max(outputs.data, 1)   
-    print(predicted)
-    print(outputs.data/np.amax(np.array(outputs.data)))
-    print(Sign[int(predicted[0])])
-    _, predicted = torch.max(outputs.data, 1)
-    
     
     return int(predicted[0])
+
+
+
+
+
+
 
 # Live camera feed hvor billede skal 'fodres' til imageSegmentation og så CNN
 def getFrame():
@@ -110,11 +111,14 @@ def getFrame():
 
 
 #MAIN
-while True:
+for i in range(0, 30):
+
     # Get frame and determin mathString with CNN
-    frame = getFrame()
+    #frame = getFrame()
+    frame = im.open('bilag/11Symbols/'+str(i)+'.png')
+    frame = np.asarray(frame)
     symbols = getSymbols(frame)
-    print(symbols)
+    print(i, symbols)
 
     if symbols != 'error':
 
@@ -172,7 +176,7 @@ while True:
                 result-= numbers[i]
         
         # FINAL RESULT
-        print(result)
+        #print(result)
     
     else:
         print('No result')
