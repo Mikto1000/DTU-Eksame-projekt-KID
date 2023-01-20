@@ -91,8 +91,8 @@ print(correct)
 
 
 
-
 '''
+correct = []
 for i in range(10):
     files = os.listdir('valid/'+str(i))
     correct.append([])
