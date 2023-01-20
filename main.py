@@ -112,11 +112,14 @@ def getFrame():
 
 
 #MAIN
-while True:
+for i in range(0, 30):
+
     # Get frame and determin mathString with CNN
-    frame = getFrame()
+    #frame = getFrame()
+    frame = im.open('bilag/3Symbols/'+str(i)+'.png')
+    frame = np.asarray(frame)
     symbols = getSymbols(frame)
-    print(symbols)
+    print(i, symbols)
 
     if symbols != 'error':
 
@@ -174,7 +177,7 @@ while True:
                 result-= numbers[i]
         
         # FINAL RESULT
-        print(result)
+        #print(result)
     
     else:
         print('No result')
