@@ -1,9 +1,11 @@
 #Import CNN dependencies and Current Model
 import torch
+import torch.nn.functional as F
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms as transforms
 from PIL import Image
+
 class CNN(nn.Module):
     def __init__(self, in_channels=1, num_classes=13):
         super(CNN, self).__init__()
@@ -33,6 +35,7 @@ class CNN(nn.Module):
         x = x.reshape(x.shape[0], -1)
         x = self.fc1(x)
         return x
+
 model=CNN(in_channels=1, num_classes=13)
 model.load_state_dict(torch.load("TrainedModel.pth"))
 model.eval()
@@ -45,8 +48,6 @@ from PIL import Image as im
 from PIL import ImageOps
 from imageSegmentation import segmentImageSymbols as segmentImage
 
-import datetime
-
 
 
 # image segmentation af camera feed som returnere et (N,28,28) array, hvor N er antal symboler
@@ -56,11 +57,13 @@ def getSymbols(frame):
     # Get processed data from image
     symbolData = segmentImage(frame)
 
+    if symbolData == 'error':
+        return 'error'
+
     # The string to contain handwritten math
     MathString = ''
-    #for i in range(symbolData.shape[0]):
-        #MathString += str(CNN(symbolData[i]))
-    
+
+    Sign={0:"0",1:"1",2:"2",3:"3",4:"4",5:"5",6:"6",7:"7",8:"8",9:"9",10:"-",11:"*",12:"+"}
     for i in symbolData:
         MathString=f"{MathString}{Sign[CNN(i)]}"
 
@@ -74,7 +77,6 @@ def getSymbols(frame):
 
 
 # CNN tager en (28x28) matrix og outputter et enkelt symbol: (0-9) eller (+, -, *)
-
 def CNN(data):
     TensorTran=transforms.ToTensor()
     file=np.array(data)
@@ -87,77 +89,16 @@ def CNN(data):
     print(predicted)
     print(outputs.data/np.amax(np.array(outputs.data)))
     print(Sign[int(predicted[0])])
+    _, predicted = torch.max(outputs.data, 1)
+    
+    
     return int(predicted[0])
-
-CNN([[  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-           0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0],
-        [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-           0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0],
-        [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-           0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0],
-        [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-           0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0],
-        [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-           0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0],
-        [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-           0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0],
-        [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-           0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0],
-        [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-           0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0],
-        [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-           0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0],
-        [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-           0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0],
-        [  0,   0,   0,   0,   0,   0,   0,   1,   1,   1,   0,   0,   0,   1,
-           0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0],
-        [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-           0,   0,   1,   5,   9,  10,   9,   5,   1,   0,   0,   0,   0,   0],
-        [  0,   0,   0,   0,   4,  36,  96, 110, 113, 114, 119, 119, 125, 130,
-         130, 130, 135, 144, 145, 146, 139,  88,  14,   0,   0,   0,   0,   0],
-        [  0,   0,   0,   0,  22, 133, 222, 233, 234, 236, 237, 238, 240, 242,
-         243, 243, 244, 245, 243, 243, 239, 198,  58,   0,   0,   0,   0,   0],
-        [  0,   0,   0,   0,  16,  99, 184, 184, 175, 173, 173, 166, 158, 148,
-         146, 145, 144, 141, 132, 130, 124,  76,  11,   0,   0,   0,   0,   0],
-        [  0,   0,   0,   0,   2,  20,  49,  41,  35,  33,  31,  25,  18,   9,
-           8,   8,   6,   3,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0],
-        [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-           0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0],
-        [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-           0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0],
-        [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-           0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0],
-        [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-           0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0],
-        [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-           0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0],
-        [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-           0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0],
-        [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-           0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0],
-        [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-           0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0],
-        [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-           0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0],
-        [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-           0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0],
-        [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-           0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0],
-        [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-           0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0]])
-
-
-
-
 
 # Live camera feed hvor billede skal 'fodres' til imageSegmentation og så CNN
 def getFrame():
     cap = cv2.VideoCapture(0)
     ret, frame = cap.read()
     frame = np.asarray(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
-
-    #img = ImageOps.grayscale(im.open('testdata/5plus3.png'))
-    #frame = np.asarray(img)
 
     return frame
 
@@ -169,68 +110,69 @@ def getFrame():
 
 
 #MAIN
-#while True:
-#    a = datetime.datetime.now()
-
-    # Gat frame and determin mathString with CNN
+while True:
+    # Get frame and determin mathString with CNN
     frame = getFrame()
     symbols = getSymbols(frame)
+    print(symbols)
 
-    b = datetime.datetime.now()
-    print(b-a)
+    if symbols != 'error':
 
-    # Sorting the string into numbers and operators
-    numbers = [0]
-    mathOperators = []
-    counter = 0
-    for i in range(len(symbols)):
-        # Trying to convert symbol to number
-        try:
-            if int(symbols[i]) >= 0 or int(symbols[i]) <= 9:
-                numbers[counter] *= 10
-                numbers[counter] += int(symbols[i])
+        # Sorting the string into numbers and operators
+        numbers = [0]
+        mathOperators = []
+        counter = 0
+        for i in range(len(symbols)):
+            # Trying to convert symbol to number
+            try:
+                if int(symbols[i]) >= 0 or int(symbols[i]) <= 9:
+                    numbers[counter] *= 10
+                    numbers[counter] += int(symbols[i])
+            
+            # If symbol is not a number
+            except:
+                if symbols[i-1] == '*':
+                    pass
+                elif symbols[i] != '*' or symbols[i+1] != '*':
+                    mathOperators.append(symbols[i])
+                    numbers.append(0)
+                    counter += 1
+                else:
+                    mathOperators.append(symbols[i]+symbols[i+1])
+                    numbers.append(0)
+                    counter += 1
         
-        # If symbol is not a number
-        except:
-            if symbols[i-1] == '*':
-                pass
-            elif symbols[i] != '*' or symbols[i+1] != '*':
-                mathOperators.append(symbols[i])
-                numbers.append(0)
-                counter += 1
+
+        # Converting to Numpy array
+        mathOperators = np.asarray(mathOperators)
+        numbers = np.asarray(numbers)
+
+        # Calculating ** operator and reducing the expression
+        for i in np.where(mathOperators == '**'):
+            i = np.flip(i)
+            for u in i:
+                numbers[u] **= numbers[u+1]
+                numbers = np.delete(numbers, u+1)
+                mathOperators = np.delete(mathOperators, u)
+
+        # Calculating * operator and reducing the expression
+        for i in np.where(mathOperators == '*'):
+            i = np.flip(i)
+            for u in i:
+                numbers[u] *= numbers[u+1]
+                numbers = np.delete(numbers, u+1)
+                mathOperators = np.delete(mathOperators, u)
+
+        # Calculating + and - operator and getting final result
+        result = numbers[0]
+        for i in range(1, numbers.size):
+            if mathOperators[i-1] == '+':
+                result += numbers[i]
             else:
-                mathOperators.append(symbols[i]+symbols[i+1])
-                numbers.append(0)
-                counter += 1
+                result-= numbers[i]
+        
+        # FINAL RESULT
+        print(result)
     
-
-    # Converting to Numpy array
-    mathOperators = np.asarray(mathOperators)
-    numbers = np.asarray(numbers)
-
-    # Calculating ** operator and reducing the expression
-    for i in np.where(mathOperators == '**'):
-        i = np.flip(i)
-        for u in i:
-            numbers[u] **= numbers[u+1]
-            numbers = np.delete(numbers, u+1)
-            mathOperators = np.delete(mathOperators, u)
-
-    # Calculating * operator and reducing the expression
-    for i in np.where(mathOperators == '*'):
-        i = np.flip(i)
-        for u in i:
-            numbers[u] *= numbers[u+1]
-            numbers = np.delete(numbers, u+1)
-            mathOperators = np.delete(mathOperators, u)
-
-    # Calculating + and - operator and getting final result
-    result = numbers[0]
-    for i in range(1, numbers.size):
-        if mathOperators[i-1] == '+':
-            result += numbers[i]
-        else:
-            result-= numbers[i]
-    
-    # FINAL RESULT
-    print(result)
+    else:
+        print('No result')
