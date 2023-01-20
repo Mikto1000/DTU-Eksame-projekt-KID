@@ -61,12 +61,38 @@ def CNN(data):
     _, predicted = torch.max(outputs.data, 1)
 
 
-    return outputs.data[0]
+    #return outputs.data[0]
+    return predicted
     
 
 
 correct = []
 
+for i in range(10):
+    files = os.listdir('valid/'+str(i))
+    correct.append(0)
+    for u in range(len(files)):
+        if CNN(np.asarray(Image.open('valid/'+str(i)+'/'+files[u]))) == i:
+            correct[i] += 1
+    
+
+
+symbols = ['Minus', 'Multiplication', 'Plus']
+for i in range(3):
+    files = os.listdir('valid/'+symbols[i])
+    correct.append(0)
+    for u in range(len(files)):
+        if CNN(np.asarray(Image.open('valid/'+symbols[i]+'/'+files[u]))) == i+10:
+            correct[i+10] += 1
+
+
+print(correct)
+
+
+
+
+
+'''
 for i in range(10):
     files = os.listdir('valid/'+str(i))
     correct.append([])
@@ -83,6 +109,9 @@ for i in range(3):
     for u in range(len(files)):
         correct[i+10].append(0)
         correct[i+10][u] = float(CNN(np.asarray(Image.open('valid/'+symbols[i]+'/'+files[u])))[i+10])
+
+
+
 
 
 mean = []
@@ -116,3 +145,4 @@ for i in range(13):
 
 print(resultup)
 print(resultdown)
+'''
